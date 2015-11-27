@@ -185,4 +185,85 @@ class MailerSpec extends ObjectBehavior
 
         $this->send('Example subject', 'example-template')->shouldReturn(false);
     }
+
+    public function it_should_prevent_local_variable_duplicates(
+        \Weblee\Mandrill\Mail $mandrill,
+        \Mandrill_Messages $mandrillMessages
+    ) {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+
+        $variableOne = new Variable('example', 'Example');
+        $variableTwo = new Variable('example', 'Changed example');
+
+        $this->addRecipient($recipient);
+
+        $this->addLocalVariable($recipient, $variableOne);
+        $this->addLocalVariable($recipient, $variableTwo);
+
+        $mandrill->messages()->willReturn($mandrillMessages);
+        $mandrillMessages->sendTemplate('example-template', [], [
+            'subject' => 'Example subject',
+            'from_email' => 'johndoe@example.com',
+            'from_name' => 'John Doe',
+            'to' => [
+                [
+                    'email' => 'janedoe@example.com',
+                    'name' => 'Jane Doe',
+                    'type' => 'to'
+                ]
+            ],
+            'merge_vars' => [
+                [
+                    'rcpt' => 'janedoe@example.com',
+                    'vars' => [
+                        [
+                            'name' => 'EXAMPLE',
+                            'content' => 'Changed example'
+                        ]
+                    ]
+                ]
+            ],
+            'global_merge_vars' => [],
+        ])->shouldBeCalled();
+
+        $this->send('Example subject', 'example-template')->shouldReturn(true);
+    }
+
+    public function it_should_prevent_global_variable_duplicates(
+        \Weblee\Mandrill\Mail $mandrill,
+        \Mandrill_Messages $mandrillMessages
+    ) {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+
+        $variableOne = new Variable('example', 'Example');
+        $variableTwo = new Variable('example', 'Changed example');
+
+        $this->addRecipient($recipient);
+
+        $this->addGlobalVariable($variableOne);
+        $this->addGlobalVariable($variableTwo);
+
+        $mandrill->messages()->willReturn($mandrillMessages);
+        $mandrillMessages->sendTemplate('example-template', [], [
+            'subject' => 'Example subject',
+            'from_email' => 'johndoe@example.com',
+            'from_name' => 'John Doe',
+            'to' => [
+                [
+                    'email' => 'janedoe@example.com',
+                    'name' => 'Jane Doe',
+                    'type' => 'to'
+                ]
+            ],
+            'merge_vars' => [],
+            'global_merge_vars' => [
+                [
+                    'name' => 'EXAMPLE',
+                    'content' => 'Changed example'
+                ]
+            ]
+        ])->shouldBeCalled();
+
+        $this->send('Example subject', 'example-template')->shouldReturn(true);
+    }
 }

@@ -64,7 +64,7 @@ class Mailer implements MailerInterface
      */
     public function addGlobalVariable(Variable $variable)
     {
-        $this->globalVariables[] = [
+        $this->globalVariables[$variable->getName()] = [
             'name' => strtoupper($variable->getName()),
             'content' => $variable->getValue(),
         ];
@@ -77,7 +77,7 @@ class Mailer implements MailerInterface
      */
     public function addLocalVariable(Recipient $recipient, Variable $variable)
     {
-        $this->localVariables[$recipient->getEmail()][] = [
+        $this->localVariables[$recipient->getEmail()][$variable->getName()] = [
             'name' => strtoupper($variable->getName()),
             'content' => $variable->getValue(),
         ];
@@ -124,7 +124,7 @@ class Mailer implements MailerInterface
      */
     protected function getGlobalVariables()
     {
-        return $this->globalVariables;
+        return array_values($this->globalVariables);
     }
 
     /**
@@ -137,7 +137,7 @@ class Mailer implements MailerInterface
         foreach ($this->localVariables as $recipient => $variables) {
             $localVariables[] = [
                 'rcpt' => $recipient,
-                'vars' => $variables,
+                'vars' => array_values($variables),
             ];
         }
 
