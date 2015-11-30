@@ -1,0 +1,4 @@
+suites:
+    main:
+        namespace: DeSmart\Mailer
+        psr4_prefix: DeSmart\Mailer

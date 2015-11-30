@@ -1,0 +1,22 @@
+{
+    "name": "hydreflab/laravel-mailer",
+    "authors": [
+        {
+            "name": "Michał Golon",
+            "email": "gollum@desmart.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "5.*",
+        "weblee/mandrill": "dev-master"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "~2.1@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "DeSmart\\Mailer\\": "src/"
+        }
+    }
+}
