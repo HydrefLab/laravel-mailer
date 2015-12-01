@@ -19,6 +19,27 @@ class MandrillServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->registerProviders();
+        $this->registerCommands();
+        $this->registerClasses();
+    }
+
+    /**
+     * @return void
+     */
+    protected function loadConfiguration()
+    {
+        $configPath = __DIR__ . '/../../config/mandrill-templates.php';;
+
+        $this->publishes([$configPath => config_path('mandrill-templates.php'),]);
+        $this->mergeConfigFrom($configPath, 'mandrill-templates');
+    }
+
+    /**
+     * @return void
+     */
+    protected function registerClasses()
+    {
         $this->app->bind(\DeSmart\Mailer\MailerInterface::class, function () {
             return new Mailer(
                 $this->app->make(\Weblee\Mandrill\Mail::class),
@@ -38,11 +59,17 @@ class MandrillServiceProvider extends ServiceProvider
     /**
      * @return void
      */
-    protected function loadConfiguration()
+    protected function registerCommands()
     {
-        $configPath = __DIR__ . '/../config/mandrill-templates.php';;
-
-        $this->publishes([$configPath => config_path('mandrill-templates.php'),]);
-        $this->mergeConfigFrom($configPath, 'mandrill-templates');
+        $this->commands(\DeSmart\Mailer\Mandrill\Console\MandrillTemplatesSeedCommand::class);
     }
+
+    /**
+     * @return void
+     */
+    protected function registerProviders()
+    {
+        $this->app->register(\Weblee\Mandrill\MandrillServiceProvider::class);
+    }
+
 } 

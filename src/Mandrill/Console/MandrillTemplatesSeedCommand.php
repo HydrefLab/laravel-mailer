@@ -14,8 +14,8 @@ class MandrillTemplatesSeedCommand extends Command
     protected $mandrill;
     /** @var array */
     protected $templates;
-    /** @var array */
-    protected $templatesFilter = [];
+    /** @var array|null */
+    protected $templatesFilter;
 
     /**
      * @param Mail $mandrill
@@ -46,7 +46,7 @@ class MandrillTemplatesSeedCommand extends Command
             extract($data);
 
             try {
-                $this->mandrill->templates()->add(
+                $this->processInsertOrUpdate(
                     $name,
                     $from_email,
                     $from_name,
@@ -56,21 +56,6 @@ class MandrillTemplatesSeedCommand extends Command
                     $publish,
                     $labels
                 );
-
-                $this->info(sprintf('"%s" template has been added.', $name));
-            } catch (\Mandrill_Invalid_Template $e) {
-                $this->mandrill->templates()->update(
-                    $name,
-                    $from_email,
-                    $from_name,
-                    $subject,
-                    $code,
-                    $text,
-                    $publish,
-                    $labels
-                );
-
-                $this->info(sprintf('"%s" template already exists. Template has been updated.', $name));
             } catch (\Mandrill_Error $e) {
                 $this->error(sprintf(
                     '"%s" template cannot be added/updated. There has been an error: %s.',
@@ -81,6 +66,46 @@ class MandrillTemplatesSeedCommand extends Command
         }
     }
 
+    /**
+     * @param string $name
+     * @param string|null $fromEmail
+     * @param string|null $fromName
+     * @param string $subject
+     * @param string $code
+     * @param string|null $text
+     * @param bool $publish
+     * @param array $labels
+     */
+    protected function processInsertOrUpdate($name, $fromEmail, $fromName, $subject, $code, $text, $publish, $labels)
+    {
+        try {
+            $this->mandrill->templates()->add(
+                $name,
+                $fromEmail,
+                $fromName,
+                $subject,
+                $code,
+                $text,
+                $publish,
+                $labels
+            );
+
+            $this->info(sprintf('"%s" template has been added.', $name));
+        } catch (\Mandrill_Invalid_Template $e) {
+            $this->mandrill->templates()->update(
+                $name,
+                $fromEmail,
+                $fromName,
+                $subject,
+                $code,
+                $text,
+                $publish,
+                $labels
+            );
+
+            $this->info(sprintf('"%s" template already exists. Template has been updated.', $name));
+        }
+    }
     /**
      * @return array
      */
