@@ -1,5 +1,6 @@
 <?php namespace spec\DeSmart\Mailer\Mandrill;
 
+use DeSmart\Mailer\Attachment;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\Variable;
 use PhpSpec\ObjectBehavior;
@@ -44,6 +45,7 @@ class MailerSpec extends ObjectBehavior
             ],
             'merge_vars' => [],
             'global_merge_vars' => [],
+            'attachments' => [],
         ])->shouldBeCalled();
 
         $this->send('Example subject', 'example-template')->shouldReturn(true);
@@ -84,6 +86,7 @@ class MailerSpec extends ObjectBehavior
                     'content' => 'Second example'
                 ]
             ],
+            'attachments' => [],
         ])->shouldBeCalled();
 
         $this->send('Example subject', 'example-template')->shouldReturn(true);
@@ -154,6 +157,43 @@ class MailerSpec extends ObjectBehavior
                 ]
             ],
             'global_merge_vars' => [],
+            'attachments' => [],
+        ])->shouldBeCalled();
+
+        $this->send('Example subject', 'example-template')->shouldReturn(true);
+    }
+
+    public function it_should_send_email_with_attachments(
+        \Weblee\Mandrill\Mail $mandrill,
+        \Mandrill_Messages $mandrillMessages
+    ) {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $attachment = new Attachment('text/csv', 'test.csv', 'example;test;');
+
+        $this->addRecipient($recipient);
+        $this->addAttachment($attachment);
+
+        $mandrill->messages()->willReturn($mandrillMessages);
+        $mandrillMessages->sendTemplate('example-template', [], [
+            'subject' => 'Example subject',
+            'from_email' => 'johndoe@example.com',
+            'from_name' => 'John Doe',
+            'to' => [
+                [
+                    'email' => 'janedoe@example.com',
+                    'name' => 'Jane Doe',
+                    'type' => 'to'
+                ],
+            ],
+            'merge_vars' => [],
+            'global_merge_vars' => [],
+            'attachments' => [
+                [
+                    'type' => 'text/csv',
+                    'name' => 'test.csv',
+                    'content' => 'ZXhhbXBsZTt0ZXN0Ow=='
+                ],
+            ],
         ])->shouldBeCalled();
 
         $this->send('Example subject', 'example-template')->shouldReturn(true);
@@ -181,6 +221,7 @@ class MailerSpec extends ObjectBehavior
             ],
             'merge_vars' => [],
             'global_merge_vars' => [],
+            'attachments' => [],
         ])->shouldBeCalled()->willThrow(new \Mandrill_Error);
 
         $this->send('Example subject', 'example-template')->shouldReturn(false);
@@ -224,6 +265,7 @@ class MailerSpec extends ObjectBehavior
                 ]
             ],
             'global_merge_vars' => [],
+            'attachments' => [],
         ])->shouldBeCalled();
 
         $this->send('Example subject', 'example-template')->shouldReturn(true);
@@ -261,7 +303,8 @@ class MailerSpec extends ObjectBehavior
                     'name' => 'EXAMPLE',
                     'content' => 'Changed example'
                 ]
-            ]
+            ],
+            'attachments' => [],
         ])->shouldBeCalled();
 
         $this->send('Example subject', 'example-template')->shouldReturn(true);

@@ -39,4 +39,10 @@ interface MailerInterface
      * @return void
      */
     public function addLocalVariable(Recipient $recipient, Variable $variable);
+
+    /**
+     * @param Attachment $attachment
+     * @return void
+     */
+    public function addAttachment(Attachment $attachment);
 }
