@@ -1,5 +1,6 @@
 <?php namespace DeSmart\Mailer\Sendgrid;
 
+use DeSmart\Mailer\Attachment;
 use DeSmart\Mailer\MailerInterface;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\Variable;
@@ -44,6 +45,14 @@ class Mailer implements MailerInterface
      * @return void
      */
     public function addLocalVariable(Recipient $recipient, Variable $variable)
+    {
+    }
+
+    /**
+     * @param Attachment $attachment
+     * @return void
+     */
+    public function addAttachment(Attachment $attachment)
     {
     }
 
