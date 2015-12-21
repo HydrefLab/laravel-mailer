@@ -1,5 +1,6 @@
 <?php namespace DeSmart\Mailer\Mandrill;
 
+use DeSmart\Mailer\Attachment;
 use DeSmart\Mailer\MailerInterface;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\Variable;
@@ -18,6 +19,8 @@ class Mailer implements MailerInterface
     protected $globalVariables = [];
     /** @var array */
     protected $localVariables = [];
+    /** @var array */
+    protected $attachments = [];
 
     /**
      * @param \Weblee\Mandrill\Mail $mandrill
@@ -84,6 +87,19 @@ class Mailer implements MailerInterface
     }
 
     /**
+     * @param Attachment $attachment
+     * @return void
+     */
+    public function addAttachment(Attachment $attachment)
+    {
+        $this->attachments[] = [
+            'type' => $attachment->getType(),
+            'name' => $attachment->getName(),
+            'content' => $attachment->getContent(),
+        ];
+    }
+
+    /**
      * @param string $subject
      * @param string $template
      * @return bool
@@ -108,6 +124,7 @@ class Mailer implements MailerInterface
             'to' => $recipients,
             'merge_vars' => $this->getLocalVariables(),
             'global_merge_vars' => $this->getGlobalVariables(),
+            'attachments' => $this->attachments,
         ];
 
         try {
