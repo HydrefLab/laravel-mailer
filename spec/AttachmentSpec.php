@@ -21,7 +21,7 @@ class AttachmentSpec extends ObjectBehavior
         $this->getType()->shouldReturn('text/csv');
     }
 
-    public function it_should_get_namel()
+    public function it_should_get_name()
     {
         $this->getName()->shouldReturn('test.csv');
     }
