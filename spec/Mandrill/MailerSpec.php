@@ -1,6 +1,7 @@
 <?php namespace spec\DeSmart\Mailer\Mandrill;
 
 use DeSmart\Mailer\Attachment;
+use DeSmart\Mailer\Header;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\Variable;
 use PhpSpec\ObjectBehavior;
@@ -43,6 +44,75 @@ class MailerSpec extends ObjectBehavior
                     'type' => 'to'
                 ]
             ],
+            'headers' => [],
+            'merge_vars' => [],
+            'global_merge_vars' => [],
+            'attachments' => [],
+        ])->shouldBeCalled();
+
+        $this->send('Example subject', 'example-template')->shouldReturn(true);
+    }
+
+    public function it_should_send_email_with_additional_headers(
+        \Weblee\Mandrill\Mail $mandrill,
+        \Mandrill_Messages $mandrillMessages
+    ) {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $header = new Header('Reply-To', 'reply-to@example.com');
+
+        $this->addRecipient($recipient);
+        $this->addHeader($header);
+
+        $mandrill->messages()->willReturn($mandrillMessages);
+        $mandrillMessages->sendTemplate('example-template', [], [
+            'subject' => 'Example subject',
+            'from_email' => 'johndoe@example.com',
+            'from_name' => 'John Doe',
+            'to' => [
+                [
+                    'email' => 'janedoe@example.com',
+                    'name' => 'Jane Doe',
+                    'type' => 'to'
+                ]
+            ],
+            'headers' => [
+                'Reply-To' => 'reply-to@example.com'
+            ],
+            'merge_vars' => [],
+            'global_merge_vars' => [],
+            'attachments' => [],
+        ])->shouldBeCalled();
+
+        $this->send('Example subject', 'example-template')->shouldReturn(true);
+    }
+
+    public function it_should_prevent_header_duplicates(
+        \Weblee\Mandrill\Mail $mandrill,
+        \Mandrill_Messages $mandrillMessages
+    ) {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $header = new Header('Reply-To', 'reply-to@example.com');
+        $anotherHeader = new Header('Reply-To', 'another-reply-to@example.com');
+
+        $this->addRecipient($recipient);
+        $this->addHeader($header);
+        $this->addHeader($anotherHeader);
+
+        $mandrill->messages()->willReturn($mandrillMessages);
+        $mandrillMessages->sendTemplate('example-template', [], [
+            'subject' => 'Example subject',
+            'from_email' => 'johndoe@example.com',
+            'from_name' => 'John Doe',
+            'to' => [
+                [
+                    'email' => 'janedoe@example.com',
+                    'name' => 'Jane Doe',
+                    'type' => 'to'
+                ]
+            ],
+            'headers' => [
+                'Reply-To' => 'another-reply-to@example.com'
+            ],
             'merge_vars' => [],
             'global_merge_vars' => [],
             'attachments' => [],
@@ -75,6 +145,7 @@ class MailerSpec extends ObjectBehavior
                     'type' => 'to'
                 ]
             ],
+            'headers' => [],
             'merge_vars' => [],
             'global_merge_vars' => [
                 [
@@ -128,6 +199,7 @@ class MailerSpec extends ObjectBehavior
                     'type' => 'to'
                 ]
             ],
+            'headers' => [],
             'merge_vars' => [
                 [
                     'rcpt' => 'janedoe@example.com',
@@ -185,6 +257,7 @@ class MailerSpec extends ObjectBehavior
                     'type' => 'to'
                 ],
             ],
+            'headers' => [],
             'merge_vars' => [],
             'global_merge_vars' => [],
             'attachments' => [
@@ -219,6 +292,7 @@ class MailerSpec extends ObjectBehavior
                     'type' => 'to'
                 ]
             ],
+            'headers' => [],
             'merge_vars' => [],
             'global_merge_vars' => [],
             'attachments' => [],
@@ -253,6 +327,7 @@ class MailerSpec extends ObjectBehavior
                     'type' => 'to'
                 ]
             ],
+            'headers' => [],
             'merge_vars' => [
                 [
                     'rcpt' => 'janedoe@example.com',
@@ -297,6 +372,7 @@ class MailerSpec extends ObjectBehavior
                     'type' => 'to'
                 ]
             ],
+            'headers' => [],
             'merge_vars' => [],
             'global_merge_vars' => [
                 [
