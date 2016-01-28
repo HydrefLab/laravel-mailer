@@ -19,6 +19,8 @@ class Mailer implements MailerInterface
     /** @var array */
     protected $headers = [];
     /** @var array */
+    protected $replyTo;
+    /** @var array */
     protected $globalVariables = [];
     /** @var array */
     protected $localVariables = [];
@@ -74,6 +76,15 @@ class Mailer implements MailerInterface
     }
 
     /**
+     * @param string $email
+     * @return void
+     */
+    public function setReplyTo($email)
+    {
+        $this->headers['Reply-To'] = $email;
+    }
+
+    /**
      * @param Variable $variable
      * @return void
      */
@@ -125,7 +136,7 @@ class Mailer implements MailerInterface
             $recipients[] = [
                 'email' => $recipient->getEmail(),
                 'name' => $recipient->getName(),
-                'type' => 'to',
+                'type' => $recipient->getType()->getType(),
             ];
         }
 

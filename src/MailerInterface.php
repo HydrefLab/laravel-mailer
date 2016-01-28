@@ -34,6 +34,12 @@ interface MailerInterface
     public function addHeader(Header $header);
 
     /**
+     * @param string $email
+     * @return void
+     */
+    public function setReplyTo($email);
+
+    /**
      * @param Variable $variable
      * @return void
      */
