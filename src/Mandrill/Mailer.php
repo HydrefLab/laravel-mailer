@@ -1,6 +1,7 @@
 <?php namespace DeSmart\Mailer\Mandrill;
 
 use DeSmart\Mailer\Attachment;
+use DeSmart\Mailer\Header;
 use DeSmart\Mailer\MailerInterface;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\Variable;
@@ -15,6 +16,10 @@ class Mailer implements MailerInterface
     protected $fromName;
     /** @var array */
     protected $recipients = [];
+    /** @var array */
+    protected $headers = [];
+    /** @var array */
+    protected $replyTo;
     /** @var array */
     protected $globalVariables = [];
     /** @var array */
@@ -59,6 +64,24 @@ class Mailer implements MailerInterface
     public function addRecipient(Recipient $recipient)
     {
         $this->recipients[] = $recipient;
+    }
+
+    /**
+     * @param Header $header
+     * @return void
+     */
+    public function addHeader(Header $header)
+    {
+        $this->headers[$header->getName()] = $header->getValue();
+    }
+
+    /**
+     * @param string $email
+     * @return void
+     */
+    public function setReplyTo($email)
+    {
+        $this->headers['Reply-To'] = $email;
     }
 
     /**
@@ -113,7 +136,7 @@ class Mailer implements MailerInterface
             $recipients[] = [
                 'email' => $recipient->getEmail(),
                 'name' => $recipient->getName(),
-                'type' => 'to',
+                'type' => $recipient->getType()->getType(),
             ];
         }
 
@@ -122,6 +145,7 @@ class Mailer implements MailerInterface
             'from_email' => $this->fromEmail,
             'from_name' => $this->fromName,
             'to' => $recipients,
+            'headers' => $this->headers,
             'merge_vars' => $this->getLocalVariables(),
             'global_merge_vars' => $this->getGlobalVariables(),
             'attachments' => $this->attachments,

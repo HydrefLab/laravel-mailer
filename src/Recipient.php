@@ -6,15 +6,19 @@ class Recipient
     protected $name;
     /** @var string */
     protected $email;
+    /** @var RecipientType */
+    protected $type;
 
     /**
-     * @param string $name
-     * @param string $email
+     * @param $name
+     * @param $email
+     * @param RecipientType|null $type
      */
-    public function __construct($name, $email)
+    public function __construct($name, $email, RecipientType $type = null)
     {
         $this->name = $name;
         $this->email = $email;
+        $this->type = (null !== $type) ? $type : RecipientType::to();
     }
 
     /**
@@ -31,5 +35,13 @@ class Recipient
     public function getEmail()
     {
         return $this->email;
+    }
+
+    /**
+     * @return RecipientType
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 }

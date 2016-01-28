@@ -1,5 +1,6 @@
 <?php namespace spec\DeSmart\Mailer;
 
+use DeSmart\Mailer\RecipientType;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -24,5 +25,18 @@ class RecipientSpec extends ObjectBehavior
     public function it_should_get_email()
     {
         $this->getEmail()->shouldReturn('johndoe@example.com');
+    }
+
+    public function it_should_get_default_recipient_type()
+    {
+        $this->getType()->equals(RecipientType::to())->shouldReturn(true);
+    }
+
+    public function it_should_get_recipient_type()
+    {
+        $this->beConstructedWith('John Doe', 'johndoe@example.com', RecipientType::bcc());
+
+        $this->getType()->equals(RecipientType::to())->shouldReturn(false);
+        $this->getType()->equals(RecipientType::bcc())->shouldReturn(true);
     }
 }
