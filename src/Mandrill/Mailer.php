@@ -19,8 +19,6 @@ class Mailer implements MailerInterface
     /** @var array */
     protected $headers = [];
     /** @var array */
-    protected $replyTo;
-    /** @var array */
     protected $globalVariables = [];
     /** @var array */
     protected $localVariables = [];
@@ -156,7 +154,7 @@ class Mailer implements MailerInterface
 
             return true;
         } catch (\Mandrill_Error $e) {
-            return false;
+            return false; // TODO
         }
     }
 

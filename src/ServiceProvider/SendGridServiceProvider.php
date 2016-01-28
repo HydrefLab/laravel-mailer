@@ -2,7 +2,7 @@
 
 use Illuminate\Support\ServiceProvider;
 
-class SendgridServiceProvider extends ServiceProvider
+class SendGridServiceProvider extends ServiceProvider
 {
     public function boot()
     {
@@ -14,6 +14,6 @@ class SendgridServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind(\DeSmart\Mailer\MailerInterface::class, \DeSmart\Mailer\Sendgrid\Mailer::class);
+        $this->app->bind(\DeSmart\Mailer\MailerInterface::class, \DeSmart\Mailer\SendGrid\Mailer::class);
     }
 } 
