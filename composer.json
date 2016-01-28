@@ -10,7 +10,8 @@
         "php": ">=5.5.9",
         "illuminate/console": "5.*",
         "illuminate/support": "5.*",
-        "weblee/mandrill": "dev-master"
+        "weblee/mandrill": "dev-master",
+        "sendgrid/sendgrid": "4.0.*"
     },
     "require-dev": {
         "phpspec/phpspec": "~2.1@dev"
