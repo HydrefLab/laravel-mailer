@@ -30,10 +30,14 @@ class Mailer implements MailerInterface
 
     /**
      * @param \SendGrid $sendgrid
+     * @param $fromEmail
+     * @param $fromName
      */
-    public function __construct(\SendGrid $sendgrid)
+    public function __construct(\SendGrid $sendgrid, $fromEmail, $fromName)
     {
         $this->sendgrid = $sendgrid;
+        $this->fromEmail = $fromEmail;
+        $this->fromName = $fromName;
     }
 
     /**
@@ -93,7 +97,7 @@ class Mailer implements MailerInterface
 
             return true;
         } catch (\SendGrid\Exception $e) {
-            return false; // TODO
+            return false;
         }
     }
 
@@ -160,7 +164,7 @@ class Mailer implements MailerInterface
         $localVariables = [];
 
         if (false === empty($this->localVariables)) {
-            foreach ($this->recipients as $email => $recipient) {
+            foreach (array_keys($this->recipients) as $email) {
                 foreach ($this->localVariables[$email] as $variable) {
                     /** @var Variable $variable */
                     $localVariables[$variable->getName()][] = $variable->getValue();

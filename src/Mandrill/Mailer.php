@@ -154,7 +154,7 @@ class Mailer implements MailerInterface
 
             return true;
         } catch (\Mandrill_Error $e) {
-            return false; // TODO
+            return false;
         }
     }
 

@@ -71,5 +71,4 @@ class MandrillServiceProvider extends ServiceProvider
     {
         $this->app->register(\Weblee\Mandrill\MandrillServiceProvider::class);
     }
-
 } 
