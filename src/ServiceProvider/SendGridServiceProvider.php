@@ -1,5 +1,6 @@
 <?php namespace DeSmart\Mailer\ServiceProvider;
 
+use DeSmart\Mailer\SendGrid\Mailer;
 use Illuminate\Support\ServiceProvider;
 
 class SendGridServiceProvider extends ServiceProvider
@@ -14,6 +15,12 @@ class SendGridServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind(\DeSmart\Mailer\MailerInterface::class, \DeSmart\Mailer\SendGrid\Mailer::class);
+        $this->app->bind(\DeSmart\Mailer\MailerInterface::class, function () {
+            return new Mailer(
+                new \SendGrid($this->app['config']['services']['sendgrid']['apikey']),
+                $this->app['config']['mail']['from']['address'],
+                $this->app['config']['mail']['from']['name']
+            );
+        });
     }
 } 
