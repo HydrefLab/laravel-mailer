@@ -1,10 +1,9 @@
-<?php namespace DeSmart\Mailer\ServiceProvider;
+<?php namespace DeSmart\Mailer;
 
 use DeSmart\Mailer\Mandrill\Console\MandrillTemplatesSeedCommand;
-use DeSmart\Mailer\Mandrill\Mailer;
 use Illuminate\Support\ServiceProvider;
 
-class MandrillServiceProvider extends ServiceProvider
+class MailerServiceProvider extends ServiceProvider
 {
     /**
      * @return void
@@ -19,9 +18,8 @@ class MandrillServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->registerProviders();
-        $this->registerCommands();
         $this->registerClasses();
+        $this->registerCommands();
     }
 
     /**
@@ -29,10 +27,13 @@ class MandrillServiceProvider extends ServiceProvider
      */
     protected function loadConfiguration()
     {
-        $configPath = __DIR__ . '/../../config/mandrill-templates.php';;
+        $configPath = __DIR__ . '/../../config/mailer.php';
+        $mandrillTemplatesConfigPath = __DIR__ . '/../../config/mandrill-templates.php';
 
-        $this->publishes([$configPath => config_path('mandrill-templates.php'),]);
-        $this->mergeConfigFrom($configPath, 'mandrill-templates');
+        $this->publishes([
+            $configPath => config_path('mailer.php'),
+            $mandrillTemplatesConfigPath => config_path('mandrill-templates.php'),
+        ]);
     }
 
     /**
@@ -40,12 +41,10 @@ class MandrillServiceProvider extends ServiceProvider
      */
     protected function registerClasses()
     {
-        $this->app->bind(\DeSmart\Mailer\MailerInterface::class, function () {
-            return new Mailer(
-                $this->app->make(\Weblee\Mandrill\Mail::class),
-                $this->app['config']['mail']['from']['address'],
-                $this->app['config']['mail']['from']['name']
-            );
+        $this->app->bind(\DeSmart\Mailer\MailerInterface::class, function ($app) {
+            $manager = new MailerManager($app);
+
+            return $manager->driver();
         });
 
         $this->app->bind(\DeSmart\Mailer\Mandrill\Console\MandrillTemplatesSeedCommand::class, function () {
@@ -62,13 +61,5 @@ class MandrillServiceProvider extends ServiceProvider
     protected function registerCommands()
     {
         $this->commands(\DeSmart\Mailer\Mandrill\Console\MandrillTemplatesSeedCommand::class);
-    }
-
-    /**
-     * @return void
-     */
-    protected function registerProviders()
-    {
-        $this->app->register(\Weblee\Mandrill\MandrillServiceProvider::class);
     }
 } 
