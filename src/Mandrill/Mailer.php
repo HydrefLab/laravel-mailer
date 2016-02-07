@@ -19,8 +19,6 @@ class Mailer implements MailerInterface
     /** @var array */
     protected $headers = [];
     /** @var array */
-    protected $replyTo;
-    /** @var array */
     protected $globalVariables = [];
     /** @var array */
     protected $localVariables = [];
@@ -118,7 +116,7 @@ class Mailer implements MailerInterface
         $this->attachments[] = [
             'type' => $attachment->getType(),
             'name' => $attachment->getName(),
-            'content' => $attachment->getContent(),
+            'content' => base64_encode($attachment->getContent()),
         ];
     }
 
@@ -126,6 +124,7 @@ class Mailer implements MailerInterface
      * @param string $subject
      * @param string $template
      * @return bool
+     * @throws \Mandrill_Error
      */
     public function send($subject, $template)
     {
@@ -151,13 +150,9 @@ class Mailer implements MailerInterface
             'attachments' => $this->attachments,
         ];
 
-        try {
-            $this->mandrill->messages()->sendTemplate($template, [], $message);
+        $this->mandrill->messages()->sendTemplate($template, [], $message);
 
-            return true;
-        } catch (\Mandrill_Error $e) {
-            return false;
-        }
+        return true;
     }
 
     /**
