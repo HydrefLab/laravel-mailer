@@ -6,6 +6,7 @@ use DeSmart\Mailer\MailerInterface;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\RecipientType;
 use DeSmart\Mailer\Variable;
+use Illuminate\Contracts\Filesystem\Filesystem;
 
 class Mailer implements MailerInterface
 {
@@ -15,6 +16,8 @@ class Mailer implements MailerInterface
     protected $fromEmail;
     /** @var string */
     protected $fromName;
+    /** @var Filesystem */
+    protected $storage;
     /** @var Recipient[] */
     protected $recipients = [];
     /** @var Header[] */
@@ -25,17 +28,19 @@ class Mailer implements MailerInterface
     protected $globalVariables = [];
     /** @var Variable[] */
     protected $localVariables = [];
-    /** @var array */
+    /** @var Attachment[] */
     protected $attachments = [];
 
     /**
      * @param \SendGrid $sendgrid
+     * @param Filesystem $storage
      * @param $fromEmail
      * @param $fromName
      */
-    public function __construct(\SendGrid $sendgrid, $fromEmail, $fromName)
+    public function __construct(\SendGrid $sendgrid, Filesystem $storage, $fromEmail, $fromName)
     {
         $this->sendgrid = $sendgrid;
+        $this->storage = $storage;
         $this->fromEmail = $fromEmail;
         $this->fromName = $fromName;
     }
@@ -83,6 +88,7 @@ class Mailer implements MailerInterface
 
         $email->setSections($this->globalVariables);
         $email->setSubstitutions($this->getLocalVariables());
+        $email->setAttachments($this->attachments);
 
         if (null !== $this->replyTo) {
             $email->setReplyTo($this->replyTo);
@@ -94,9 +100,12 @@ class Mailer implements MailerInterface
 
         try {
             $this->sendgrid->send($email);
+            $this->cleanAttachments();
 
             return true;
         } catch (\SendGrid\Exception $e) {
+            $this->cleanAttachments();
+
             return false;
         }
     }
@@ -153,7 +162,13 @@ class Mailer implements MailerInterface
      */
     public function addAttachment(Attachment $attachment)
     {
-        // TODO
+        /** @var \League\Flysystem\Adapter\AbstractAdapter $adapter */
+        $adapter = $this->storage->getAdapter();
+
+        $attachmentPath = 'attachments' . DIRECTORY_SEPARATOR . $attachment->getName();
+
+        $this->storage->put($attachmentPath, $attachment->getContent());
+        $this->attachments[$attachmentPath] = $adapter->getPathPrefix() . $attachmentPath;
     }
 
     /**
@@ -173,5 +188,13 @@ class Mailer implements MailerInterface
         }
 
         return $localVariables;
+    }
+
+    /**
+     * @return void
+     */
+    protected function cleanAttachments()
+    {
+        $this->storage->delete(array_keys($this->attachments));
     }
 }

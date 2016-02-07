@@ -4,6 +4,7 @@ use DeSmart\Mailer\Header;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\RecipientType;
 use DeSmart\Mailer\Variable;
+use Illuminate\Contracts\Filesystem\Filesystem as FilesystemInterface;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -14,9 +15,9 @@ class MailerSpec extends ObjectBehavior
         $this->shouldHaveType(\DeSmart\Mailer\SendGrid\Mailer::class);
     }
 
-    public function let(\SendGrid $sendGrid)
+    public function let(\SendGrid $sendGrid, FilesystemInterface $storage)
     {
-        $this->beConstructedWith($sendGrid, 'yoda@jedi.com', 'Master Jedi Yoda');
+        $this->beConstructedWith($sendGrid, $storage, 'yoda@jedi.com', 'Master Jedi Yoda');
     }
 
     public function it_should_send_email(\SendGrid $sendGrid)
