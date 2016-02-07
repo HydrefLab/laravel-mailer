@@ -116,7 +116,7 @@ class Mailer implements MailerInterface
         $this->attachments[] = [
             'type' => $attachment->getType(),
             'name' => $attachment->getName(),
-            'content' => $attachment->getContent(),
+            'content' => base64_encode($attachment->getContent()),
         ];
     }
 
