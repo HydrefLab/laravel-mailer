@@ -62,4 +62,4 @@ class MailerServiceProvider extends ServiceProvider
     {
         $this->commands(\DeSmart\Mailer\Mandrill\Console\MandrillTemplatesSeedCommand::class);
     }
-} 
+}
