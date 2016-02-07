@@ -67,6 +67,7 @@ class Mailer implements MailerInterface
      * @param string $subject
      * @param string $template
      * @return bool
+     * @throws \SendGrid\Exception
      */
     public function send($subject, $template)
     {
@@ -106,7 +107,7 @@ class Mailer implements MailerInterface
         } catch (\SendGrid\Exception $e) {
             $this->cleanAttachments();
 
-            return false;
+            throw $e;
         }
     }
 
