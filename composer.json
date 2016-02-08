@@ -9,12 +9,16 @@
     "require": {
         "php": ">=5.5.9",
         "illuminate/console": "5.*",
-        "illuminate/support": "5.*",
-        "weblee/mandrill": "dev-master",
-        "sendgrid/sendgrid": "4.0.*"
+        "illuminate/support": "5.*"
+    },
+    "suggest": {
+        "weblee/mandrill": "Required if Mandrill mailer will be used",
+        "sendgrid/sendgrid": "Required if SendGrid mailer will be used"
     },
     "require-dev": {
-        "phpspec/phpspec": "~2.1@dev"
+        "phpspec/phpspec": "~2.1@dev",
+        "weblee/mandrill": "dev-master",
+        "sendgrid/sendgrid": "4.0.*"
     },
     "autoload": {
         "psr-4": {
