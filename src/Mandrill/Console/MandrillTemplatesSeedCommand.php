@@ -106,6 +106,7 @@ class MandrillTemplatesSeedCommand extends Command
             $this->info(sprintf('"%s" template already exists. Template has been updated.', $name));
         }
     }
+
     /**
      * @return array
      */

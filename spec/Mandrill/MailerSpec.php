@@ -333,7 +333,7 @@ class MailerSpec extends ObjectBehavior
             'attachments' => [],
         ])->shouldBeCalled()->willThrow(new \Mandrill_Error);
 
-        $this->send('Example subject', 'example-template')->shouldReturn(false);
+        $this->shouldThrow(\Mandrill_Error::class)->during('send', ['Example subject', 'example-template']);
     }
 
     public function it_should_prevent_local_variable_duplicates(

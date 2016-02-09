@@ -42,6 +42,6 @@ class Attachment
      */
     public function getContent()
     {
-        return base64_encode($this->content);
+        return $this->content;
     }
 }

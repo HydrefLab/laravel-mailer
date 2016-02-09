@@ -26,8 +26,8 @@ class AttachmentSpec extends ObjectBehavior
         $this->getName()->shouldReturn('test.csv');
     }
 
-    public function it_should_get_content_in_base_64()
+    public function it_should_get_content()
     {
-        $this->getContent()->shouldReturn('ZXhhbXBsZTt0ZXN0Ow==');
+        $this->getContent()->shouldReturn('example;test;');
     }
 }
