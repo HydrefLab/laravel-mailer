@@ -49,7 +49,7 @@ Package is compatible with Laravel 5.2.
 
 2. Add `DeSmart\Mailer\MailerServiceProvider::class` to your `config/app.php` file
 3. Publish mailer configuration as well as Mandrill templates configuration: `php artisan vendor:publish`. This will create `config/mailer.php` and `config/mandrill-templates.php` files
-4. Mailer configuration is based on .env entries:
+4. Mailer configuration is based on `.env` entries:
 
    ```json
     MAILER_DRIVER=mandrill or sendgrid
@@ -83,6 +83,122 @@ _Package implements wrapper only for Mandrill._
    ```json
     MANDRILL_SECRET=YOUR_API_KEY
    ```
+
+## Interface overview
+Package provides unified interface for both mailers:
+```php
+interface MailerInterface
+{
+    /**
+     * @param string $email
+     * @return void
+     */
+    public function setFromEmail($email);
+
+    /**
+     * @param string $name
+     * @return void
+     */
+    public function setFromName($name);
+
+    /**
+     * @param string $subject
+     * @param string $template
+     * @return bool
+     */
+    public function send($subject, $template);
+
+    /**
+     * @param Recipient $recipient
+     * @return void
+     */
+    public function addRecipient(Recipient $recipient);
+
+    /**
+     * @param Header $header
+     * @return void
+     */
+    public function addHeader(Header $header);
+
+    /**
+     * @param string $email
+     * @return void
+     */
+    public function setReplyTo($email);
+
+    /**
+     * @param Variable $variable
+     * @return void
+     */
+    public function addGlobalVariable(Variable $variable);
+
+    /**
+     * @param Recipient $recipient
+     * @param Variable $variable
+     * @return void
+     */
+    public function addLocalVariable(Recipient $recipient, Variable $variable);
+
+    /**
+     * @param Attachment $attachment
+     * @return void
+     */
+    public function addAttachment(Attachment $attachment);
+```
+
+- `setFromEmail()`: overrides default email sender; takes `string` argument
+- `setFromName()`: overrides default email sender name; takes `string` argument
+- `addRecipient()`: adds recipient to the message; requires `Recipient` object as argument
+- `addHeader()`: adds proper SMTP header to the message; requires `Header` object as argument
+- `setReplyTo()`: sets reply-to email; takes `string` argument
+- `addGlobalVariable()`: adds variable shared by all recipients (in Mandrill it is equivalent to global merge var, in SendGrid it is equivalent to section); requires `Variable` object as argument
+- `addLocalVariable()`: adds variable for specified recipient (in Manrdill it is equivalent to merge var, in SendGrid it is equivalent to substitution); requires `Recipient` and `Variable` objects as arguments
+- `addAttachment()`: adds attachment to the message; requires `Attachment` object as argument
+
+### Recipient object
+Recipient object describes details of recipient.
+
+Recipient object takes three arguments:
+- recipient name: `string`
+- recipient email: `string`
+- recipient type (optional): `RecipientType` object (if recipient type is not passed, type is set as `to`)
+
+### RecipientType object
+RecipientType object describes type of recipient - is he either:
+- primary recipient (`to`) or
+- should be in copy (`cc`) or
+- should be in hidden copy (`bcc`).
+
+RecipientType object is simple value object with named constructors:
+- `RecipientType::to()`
+- `RecipientType::bcc()`
+- `RecipientType::cc()`
+
+### Variable object
+Variable object describes details of variable that is used for personalizing email content. Variable (defined by its name) is placed in email templates.
+
+Variable object takes two arguments:
+- variable name: `string`
+- variable value: `string`
+
+### Header object
+Header object described SMTP header details. for more details about acceptable headers, check Mandrill/SendGrid API docs.
+
+Header object takes two arguments:
+- variable name: `string`
+- variable value: `string`
+
+### Attachment object
+Attachment object contains data about file attached to the message. Content set in object should be in plain text.
+
+For Mandrill, content is base64 encoded when passed to API. 
+
+For SendGrid, temporary file with content is created, then path to this file is passed to API. After message is sent, temporary file is deleted.
+
+Attachment object takes three arguments:
+- attachment MIME type: `string`
+- attachment filename: `string`
+- attachment content (in plain text): `string`
 
 ## Usage
 ### PHP
@@ -123,7 +239,8 @@ class Notifier
         );
 
         // To add attachment
-        $this->mailer->addAttachment(new Attachment('application/pdf', 'attachment.pdf', 'PDF content'));
+        $this->mailer->addAttachment(new Attachment('application/pdf', 'attachment.pdf', 'PDF content in plain text'));
+        $this->mailer->addAttachment(new Attachment('text/html', 'attachment.txt', 'Txt file content in plain text'));
 
         // To set reply to
         $this->mailer->setReplyTo('reply-to@example.com');
