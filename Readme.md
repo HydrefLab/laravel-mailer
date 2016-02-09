@@ -47,8 +47,8 @@ Package is compatible with Laravel 5.2.
     }
     ```
 
-2. Add `DeSmart\Mailer\MailerServiceProvider::class` to your `config/app.php` file
-3. Publish mailer configuration as well as Mandrill templates configuration: `php artisan vendor:publish`. This will create `config/mailer.php` and `config/mandrill-templates.php` files
+2. Add `DeSmart\Mailer\MailerServiceProvider::class` to your `config/app.php` file.
+3. Publish mailer configuration: `php artisan vendor:publish`. This will create `config/mailer.php` file.
 4. Mailer configuration is based on `.env` entries:
 
    ```json
@@ -57,10 +57,15 @@ Package is compatible with Laravel 5.2.
     DEFAULT_MAIL_FROM=mailer@example.com
     DEFAULT_MAIL_NAME=Mailer
    ```
-5. _(Mandrill usage only)_ In `config/mandrill-templates.php` you can configure your Mandrill templates. This configuration is used by `mandrill_templates:seed` artisan command
+5. _(Mandrill usage only)_ If you want to use templates create/update functionality:
+   1. Add `DeSmart\Mailer\Mandrill\MandrillTemplatesSeedCommandServiceProvider::class` to your `config/app.php` file.
+   2. Publish Mandrill templates configuration: `php artisan vendor:publish`. This will create `config/mandrill-templates.php` file where you can configure your Mandrill templates. This configuration is used by `mandrill_templates:seed` artisan command.
+   3. _<b>Important</b>_ Step 5.i & 5.ii should be done after installing Mailer package - this is because template seeder uses mailer configuration which has to be published first.
 
 ### Version < 2.0
 _Package implements wrapper only for Mandrill._
+
+_If possible, please use version >= 2.0_
 
 1. Add `hydreflab/laravel-mailer` to your `composer.json`:
 
@@ -71,8 +76,8 @@ _Package implements wrapper only for Mandrill._
         }
     }
    ```
-2. Add `DeSmart\Mailer\ServiceProvider\MandrillServiceProvider::class` to your `config/app.php` file
-3. Publish Mandrill templates configuration: `php artisan vendor:publish`. This will create `config/mandrill-templates.php` file where you can configure your templates. This configuration is used by `mandrill_templates:seed` artisan command
+2. Add `DeSmart\Mailer\ServiceProvider\MandrillServiceProvider::class` to your `config/app.php` file.
+3. Publish Mandrill templates configuration: `php artisan vendor:publish`. This will create `config/mandrill-templates.php` file where you can configure your templates. This configuration is used by `mandrill_templates:seed` artisan command.
 4. Mandrill mailer uses configuration for default sender email and name. You can find it inside `config/mail.php` file:
 
    ```php
@@ -154,6 +159,7 @@ interface MailerInterface
 - `addGlobalVariable()`: adds variable shared by all recipients (in Mandrill it is equivalent to global merge var, in SendGrid it is equivalent to section); requires `Variable` object as argument
 - `addLocalVariable()`: adds variable for specified recipient (in Manrdill it is equivalent to merge var, in SendGrid it is equivalent to substitution); requires `Recipient` and `Variable` objects as arguments
 - `addAttachment()`: adds attachment to the message; requires `Attachment` object as argument
+- `send()`: sends message to previously defined recipients; requires email subject (`string`) and template identifier (`string`)
 
 ### Recipient object
 Recipient object describes details of recipient.
