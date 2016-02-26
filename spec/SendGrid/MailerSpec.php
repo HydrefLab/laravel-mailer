@@ -29,8 +29,9 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
 
         $sendGrid->send($email)->shouldBeCalled();
@@ -53,11 +54,12 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
-        $email->addTo('johndoe@example.com', 'John Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('johndoe@example.com', 'John Doe');
         $email->addCc('brucewayne@gotham.com', 'Bruce Wayne');
         $email->addBcc('clarkkent@dailyplanet.com', 'Clark Kent');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
 
         $sendGrid->send($email)->shouldBeCalled();
@@ -80,8 +82,9 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
         $email->setReplyTo('reply-to@example.com');
         $email->setHeaders([
@@ -108,8 +111,9 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
         $email->setSections([
             'Some variable' => 'Some variable value',
@@ -141,9 +145,10 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
-        $email->addTo('johndoe@example.com', 'John Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('johndoe@example.com', 'John Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
         $email->setSubstitutions([
             'Some variable' => ['Jane value for variable', 'John value for variable'],
