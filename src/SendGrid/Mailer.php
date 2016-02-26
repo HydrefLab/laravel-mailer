@@ -75,11 +75,12 @@ class Mailer implements MailerInterface
         $email->setFrom($this->fromEmail);
         $email->setFromName($this->fromName);
         $email->setSubject($subject);
+        $email->setHtml(' ');
         $email->setTemplateId($template);
 
         foreach ($this->recipients as $recipient) {
             if (true === $recipient->getType()->equals(RecipientType::to())) {
-                $email->addTo($recipient->getEmail(), $recipient->getName());
+                $email->addSmtpapiTo($recipient->getEmail(), $recipient->getName());
             } else if (true === $recipient->getType()->equals(RecipientType::bcc())) {
                 $email->addBcc($recipient->getEmail(), $recipient->getName());
             } else if (true === $recipient->getType()->equals(RecipientType::cc())) {
