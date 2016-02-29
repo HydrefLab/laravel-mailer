@@ -2,8 +2,10 @@
 
 use DeSmart\Mailer\Attachment;
 use DeSmart\Mailer\Header;
+use DeSmart\Mailer\Job;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\Variable;
+use Illuminate\Contracts\Queue\Queue;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -14,9 +16,9 @@ class MailerSpec extends ObjectBehavior
         $this->shouldHaveType(\DeSmart\Mailer\Mandrill\Mailer::class);
     }
 
-    public function let(\Weblee\Mandrill\Mail $mandrill)
+    public function let(\Weblee\Mandrill\Mail $mandrill, Queue $queue)
     {
-        $this->beConstructedWith($mandrill, 'johndoe@example.com', 'John Doe');
+        $this->beConstructedWith($mandrill, $queue, 'johndoe@example.com', 'John Doe');
     }
 
     public function it_should_implement_mailer_interface()
@@ -419,5 +421,196 @@ class MailerSpec extends ObjectBehavior
         ])->shouldBeCalled();
 
         $this->send('Example subject', 'example-template')->shouldReturn(true);
+    }
+
+    public function it_gets_mailer_data()
+    {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $variableOne = new Variable('global_one', 'Example');
+        $variableTwo = new Variable('global_two', 'Another example');
+        $variableThree = new Variable('local', 'Yet another example');
+        $attachment = new Attachment('text/csv', 'test.csv', 'example;test;');
+
+        $this->setSubject('Example subject');
+        $this->setTemplate('example template');
+        $this->addRecipient($recipient);
+        $this->addGlobalVariable($variableOne);
+        $this->addGlobalVariable($variableTwo);
+        $this->addLocalVariable($recipient, $variableThree);
+        $this->addAttachment($attachment);
+
+        $this->getData()->shouldReturn([
+            'from_name' => 'John Doe',
+            'from_email' => 'johndoe@example.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [$recipient],
+            'global_vars' => [
+                'global_one' => [
+                    'name' => 'GLOBAL_ONE',
+                    'content' => 'Example'
+                ],
+                'global_two' => [
+                    'name' => 'GLOBAL_TWO',
+                    'content' => 'Another example'
+                ]
+            ],
+            'local_vars' => [
+                'janedoe@example.com' => [
+                     'local' => [
+                        'name' => 'LOCAL',
+                        'content' => 'Yet another example'
+                    ]
+                ],
+            ],
+            'headers' => [],
+            'attachments' => [
+                [
+                    'type' => 'text/csv',
+                    'name' => 'test.csv',
+                    'content' => 'ZXhhbXBsZTt0ZXN0Ow=='
+                ]
+            ],
+        ]);
+    }
+
+    public function it_sets_mailer_data(
+        \Weblee\Mandrill\Mail $mandrill,
+        \Mandrill_Messages $mandrillMessages
+    ) {
+        $this->setData([
+            'from_name' => 'John Doe',
+            'from_email' => 'johndoe@example.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [new Recipient('Jane Doe', 'janedoe@example.com')],
+            'global_vars' => [
+                'global_one' => [
+                    'name' => 'GLOBAL_ONE',
+                    'content' => 'Example'
+                ],
+                'global_two' => [
+                    'name' => 'GLOBAL_TWO',
+                    'content' => 'Another example'
+                ]
+            ],
+            'local_vars' => [
+                'janedoe@example.com' => [
+                     'local' => [
+                        'name' => 'LOCAL',
+                        'content' => 'Yet another example'
+                    ]
+                ],
+            ],
+            'headers' => [],
+            'attachments' => [
+                [
+                    'type' => 'text/csv',
+                    'name' => 'test.csv',
+                    'content' => 'ZXhhbXBsZTt0ZXN0Ow=='
+                ]
+            ]
+        ]);
+
+        $mandrill->messages()->willReturn($mandrillMessages);
+        $mandrillMessages->sendTemplate('example template', [], [
+            'subject' => 'Example subject',
+            'from_email' => 'johndoe@example.com',
+            'from_name' => 'John Doe',
+            'to' => [
+                [
+                    'email' => 'janedoe@example.com',
+                    'name' => 'Jane Doe',
+                    'type' => 'to'
+                ]
+            ],
+            'headers' => [],
+            'merge_vars' => [
+                [
+                    'rcpt' => 'janedoe@example.com',
+                    'vars' => [
+                        [
+                            'name' => 'LOCAL',
+                            'content' => 'Yet another example'
+                        ]
+                    ]
+                ]
+            ],
+            'global_merge_vars' => [
+                [
+                    'name' => 'GLOBAL_ONE',
+                    'content' => 'Example'
+                ],
+                [
+                    'name' => 'GLOBAL_TWO',
+                    'content' => 'Another example'
+                ]
+            ],
+            'attachments' => [
+                [
+                    'type' => 'text/csv',
+                    'name' => 'test.csv',
+                    'content' => 'ZXhhbXBsZTt0ZXN0Ow=='
+                ]
+            ],
+        ])->shouldBeCalled();
+
+        $this->send()->shouldReturn(true);
+    }
+
+    public function it_pushes_mail_to_queue(Queue $queue)
+    {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $variableOne = new Variable('global_one', 'Example');
+        $variableTwo = new Variable('global_two', 'Another example');
+        $variableThree = new Variable('local', 'Yet another example');
+        $attachment = new Attachment('text/csv', 'test.csv', 'example;test;');
+
+        $data = [
+            'from_name' => 'John Doe',
+            'from_email' => 'johndoe@example.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [new Recipient('Jane Doe', 'janedoe@example.com')],
+            'global_vars' => [
+                'global_one' => [
+                    'name' => 'GLOBAL_ONE',
+                    'content' => 'Example'
+                ],
+                'global_two' => [
+                    'name' => 'GLOBAL_TWO',
+                    'content' => 'Another example'
+                ]
+            ],
+            'local_vars' => [
+                'janedoe@example.com' => [
+                    'local' => [
+                        'name' => 'LOCAL',
+                        'content' => 'Yet another example'
+                    ]
+                ],
+            ],
+            'headers' => [],
+            'attachments' => [
+                [
+                    'type' => 'text/csv',
+                    'name' => 'test.csv',
+                    'content' => 'ZXhhbXBsZTt0ZXN0Ow=='
+                ]
+            ]
+        ];
+
+        $this->setSubject('Example subject');
+        $this->setTemplate('example template');
+        $this->addRecipient($recipient);
+        $this->addGlobalVariable($variableOne);
+        $this->addGlobalVariable($variableTwo);
+        $this->addLocalVariable($recipient, $variableThree);
+        $this->addAttachment($attachment);
+
+        $job = new Job($data);
+        $queue->pushOn('mandrill', $job)->shouldBeCalled();
+
+        $this->queue()->shouldReturn(true);
     }
 }
