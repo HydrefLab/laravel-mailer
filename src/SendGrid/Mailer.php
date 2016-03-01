@@ -2,22 +2,28 @@
 
 use DeSmart\Mailer\Attachment;
 use DeSmart\Mailer\Header;
+use DeSmart\Mailer\Job;
 use DeSmart\Mailer\MailerInterface;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\RecipientType;
 use DeSmart\Mailer\Variable;
-use Illuminate\Contracts\Filesystem\Filesystem;
 
 class Mailer implements MailerInterface
 {
     /** @var \SendGrid */
     protected $sendgrid;
+    /** @var \Illuminate\Contracts\Queue\Queue */
+    protected $queue;
+    /** @var \Illuminate\Contracts\Filesystem\Filesystem */
+    protected $storage;
     /** @var string */
     protected $fromEmail;
     /** @var string */
     protected $fromName;
-    /** @var Filesystem */
-    protected $storage;
+    /** @var string */
+    protected $subject;
+    /** @var string */
+    protected $template;
     /** @var Recipient[] */
     protected $recipients = [];
     /** @var Header[] */
@@ -33,13 +39,20 @@ class Mailer implements MailerInterface
 
     /**
      * @param \SendGrid $sendgrid
-     * @param Filesystem $storage
+     * @param \Illuminate\Contracts\Queue\Queue $queue
+     * @param \Illuminate\Contracts\Filesystem\Filesystem $storage
      * @param $fromEmail
      * @param $fromName
      */
-    public function __construct(\SendGrid $sendgrid, Filesystem $storage, $fromEmail, $fromName)
-    {
+    public function __construct(
+        \SendGrid $sendgrid,
+        \Illuminate\Contracts\Queue\Queue $queue,
+        \Illuminate\Contracts\Filesystem\Filesystem $storage,
+        $fromEmail,
+        $fromName
+    ) {
         $this->sendgrid = $sendgrid;
+        $this->queue = $queue;
         $this->storage = $storage;
         $this->fromEmail = $fromEmail;
         $this->fromName = $fromName;
@@ -65,18 +78,44 @@ class Mailer implements MailerInterface
 
     /**
      * @param string $subject
+     * @return void
+     */
+    public function setSubject($subject)
+    {
+        $this->subject = $subject;
+    }
+
+    /**
      * @param string $template
+     * @return void
+     */
+    public function setTemplate($template)
+    {
+        $this->template = $template;
+    }
+
+    /**
+     * @param string|null $subject
+     * @param string|null $template
      * @return bool
      * @throws \SendGrid\Exception
      */
-    public function send($subject, $template)
+    public function send($subject = null, $template = null)
     {
+        if (null !== $subject) {
+            $this->setSubject($subject);
+        }
+
+        if (null !== $template) {
+            $this->setTemplate($template);
+        }
+
         $email = new \SendGrid\Email();
         $email->setFrom($this->fromEmail);
         $email->setFromName($this->fromName);
-        $email->setSubject($subject);
+        $email->setSubject($this->subject);
         $email->setHtml(' ');
-        $email->setTemplateId($template);
+        $email->setTemplateId($this->template);
 
         foreach ($this->recipients as $recipient) {
             if (true === $recipient->getType()->equals(RecipientType::to())) {
@@ -110,6 +149,27 @@ class Mailer implements MailerInterface
 
             throw $e;
         }
+    }
+
+    /**
+     * @param string $queue
+     * @param string|null $subject
+     * @param string|null $template
+     * @return bool
+     */
+    public function queue($queue = 'sendgrid', $subject = null, $template = null)
+    {
+        if (null !== $subject) {
+            $this->setSubject($subject);
+        }
+
+        if (null !== $template) {
+            $this->setTemplate($template);
+        }
+
+        $this->queue->pushOn($queue, new Job($this->getData()));
+
+        return true;
     }
 
     /**
@@ -171,6 +231,43 @@ class Mailer implements MailerInterface
 
         $this->storage->put($attachmentPath, $attachment->getContent());
         $this->attachments[$attachmentPath] = $adapter->getPathPrefix() . $attachmentPath;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData()
+    {
+        return [
+            'from_name' => $this->fromName,
+            'from_email' => $this->fromEmail,
+            'subject' => $this->subject,
+            'template' => $this->template,
+            'recipients' => $this->recipients,
+            'global_vars' => $this->globalVariables,
+            'local_vars' => $this->localVariables,
+            'headers' => $this->headers,
+            'reply_to' => $this->replyTo,
+            'attachments' => $this->attachments,
+        ];
+    }
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    public function setData(array $data)
+    {
+        $this->fromName = $data['from_name'];
+        $this->fromEmail = $data['from_email'];
+        $this->subject = $data['subject'];
+        $this->template = $data['template'];
+        $this->recipients = $data['recipients'];
+        $this->globalVariables = $data['global_vars'];
+        $this->localVariables = $data['local_vars'];
+        $this->headers = $data['headers'];
+        $this->replyTo = $data['reply_to'];
+        $this->attachments = $data['attachments'];
     }
 
     /**

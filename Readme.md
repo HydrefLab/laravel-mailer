@@ -108,10 +108,30 @@ interface MailerInterface
 
     /**
      * @param string $subject
+     * @return void
+     */
+    public function setSubject($subject);
+
+    /**
      * @param string $template
+     * @return void
+     */
+    public function setTemplate($template);
+
+    /**
+     * @param string|null $subject
+     * @param string|null $template
      * @return bool
      */
-    public function send($subject, $template);
+    public function send($subject = null, $template = null);
+
+    /**
+     * @param string $queue
+     * @param string|null $subject
+     * @param string|null $template
+     * @return bool
+     */
+    public function queue($queue, $subject = null, $template = null);
 
     /**
      * @param Recipient $recipient
@@ -149,17 +169,34 @@ interface MailerInterface
      * @return void
      */
     public function addAttachment(Attachment $attachment);
+
+    /**
+     * @return array
+     */
+    public function getData();
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    public function setData(array $data);
+}
 ```
 
 - `setFromEmail()`: overrides default email sender; takes `string` argument
 - `setFromName()`: overrides default email sender name; takes `string` argument
+- `setSubject()`: sets email subject; takes `string` argument
+- `setTemplate()`: sets template identifier; takes `string` argument
 - `addRecipient()`: adds recipient to the message; requires `Recipient` object as argument
 - `addHeader()`: adds proper SMTP header to the message; requires `Header` object as argument
 - `setReplyTo()`: sets reply-to email; takes `string` argument
 - `addGlobalVariable()`: adds variable shared by all recipients (in Mandrill it is equivalent to global merge var, in SendGrid it is equivalent to section); requires `Variable` object as argument
 - `addLocalVariable()`: adds variable for specified recipient (in Manrdill it is equivalent to merge var, in SendGrid it is equivalent to substitution); requires `Recipient` and `Variable` objects as arguments
 - `addAttachment()`: adds attachment to the message; requires `Attachment` object as argument
-- `send()`: sends message to previously defined recipients; requires email subject (`string`) and template identifier (`string`)
+- `send()`: sends message to previously defined recipients; email subject (`string`) and template identifier (`string`) can be passed (if subject and/or template id was not set before)
+- `queue()`: adds email to queue (**it uses Laravel queue mechanism**); queue name (`string`) can be passed as first param (by default it is set to 'mandrill'/'sendgrid'); email subject (`string`) and template identifier (`string`) can also be passed (if not set before)
+- `getData()`: gets mailer whole configuration, i.e. recipients, variables, header, etc.; returns `array`
+- `setData()`: sets mailer configuration; requires `array`
 
 ### Recipient object
 Recipient object describes details of recipient.
@@ -223,6 +260,10 @@ class Notifier
         // If you want to override default sender email and name
         $this->mailer->setFromEmail('johndoe@example.com');
         $this->mailer->setFromName('John Doe');
+        
+        // You can set subject and template identifier
+        $this->mailer->setSubject('Test subject');
+        $this->mailer->setTemplate('test-template');
 
         // To add recipient
         $this->mailer->addRecipient(new Recipient('Jane Doe', 'janedoe@example.com'));
@@ -253,8 +294,17 @@ class Notifier
         // or (Mandrill only)
         $this->mailer->addHeader(new Header('Reply-To', 'reply-to@example.com')
 
-        // To send email with subject 'test-subject' and use 'test-template' template id
+        // To send email
+        $this->mailer->send();
+        // or to send email if subject and/or template was not set before
         $this->mailer->send('Test subject', 'test-template');
+        
+        // To add email to queue
+        $this->mailer->queue();
+        // or to add email to defined queue 
+        $this->mailer->queue('queue_name');
+        // or to add email to queue if subject and/or template was not set before
+        $this->mailer->queue('queue_name', 'Test subject', 'test-template');
     }
 }
 ```
