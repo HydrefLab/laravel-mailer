@@ -16,10 +16,30 @@ interface MailerInterface
 
     /**
      * @param string $subject
+     * @return void
+     */
+    public function setSubject($subject);
+
+    /**
      * @param string $template
+     * @return void
+     */
+    public function setTemplate($template);
+
+    /**
+     * @param string|null $subject
+     * @param string|null $template
      * @return bool
      */
-    public function send($subject, $template);
+    public function send($subject = null, $template = null);
+
+    /**
+     * @param string $queue
+     * @param string|null $subject
+     * @param string|null $template
+     * @return bool
+     */
+    public function queue($queue, $subject = null, $template = null);
 
     /**
      * @param Recipient $recipient
@@ -57,4 +77,15 @@ interface MailerInterface
      * @return void
      */
     public function addAttachment(Attachment $attachment);
+
+    /**
+     * @return array
+     */
+    public function getData();
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    public function setData(array $data);
 }

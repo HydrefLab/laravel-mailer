@@ -19,6 +19,7 @@ class MailerManager extends Manager
     {
         return new \DeSmart\Mailer\Mandrill\Mailer(
             new \Weblee\Mandrill\Mail($this->app['config']['mailer']['apikey']),
+            $this->app->make(\Illuminate\Contracts\Queue\Queue::class),
             $this->app['config']['mailer']['from']['address'],
             $this->app['config']['mailer']['from']['name']
         );
@@ -31,6 +32,7 @@ class MailerManager extends Manager
     {
         return new \DeSmart\Mailer\SendGrid\Mailer(
             new \SendGrid($this->app['config']['mailer']['apikey']),
+            $this->app->make(\Illuminate\Contracts\Queue\Queue::class),
             $this->app->make(\Illuminate\Contracts\Filesystem\Filesystem::class),
             $this->app['config']['mailer']['from']['address'],
             $this->app['config']['mailer']['from']['name']

@@ -1,10 +1,12 @@
 <?php namespace spec\DeSmart\Mailer\SendGrid;
 
 use DeSmart\Mailer\Header;
+use DeSmart\Mailer\Job;
 use DeSmart\Mailer\Recipient;
 use DeSmart\Mailer\RecipientType;
 use DeSmart\Mailer\Variable;
 use Illuminate\Contracts\Filesystem\Filesystem as FilesystemInterface;
+use Illuminate\Contracts\Queue\Queue;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -15,9 +17,9 @@ class MailerSpec extends ObjectBehavior
         $this->shouldHaveType(\DeSmart\Mailer\SendGrid\Mailer::class);
     }
 
-    public function let(\SendGrid $sendGrid, FilesystemInterface $storage)
+    public function let(\SendGrid $sendGrid, Queue $queue, FilesystemInterface $storage)
     {
-        $this->beConstructedWith($sendGrid, $storage, 'yoda@jedi.com', 'Master Jedi Yoda');
+        $this->beConstructedWith($sendGrid, $queue, $storage, 'yoda@jedi.com', 'Master Jedi Yoda');
     }
 
     public function it_should_send_email(\SendGrid $sendGrid)
@@ -29,8 +31,9 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
 
         $sendGrid->send($email)->shouldBeCalled();
@@ -53,11 +56,12 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
-        $email->addTo('johndoe@example.com', 'John Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('johndoe@example.com', 'John Doe');
         $email->addCc('brucewayne@gotham.com', 'Bruce Wayne');
         $email->addBcc('clarkkent@dailyplanet.com', 'Clark Kent');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
 
         $sendGrid->send($email)->shouldBeCalled();
@@ -80,8 +84,9 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
         $email->setReplyTo('reply-to@example.com');
         $email->setHeaders([
@@ -108,8 +113,9 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
         $email->setSections([
             'Some variable' => 'Some variable value',
@@ -141,9 +147,10 @@ class MailerSpec extends ObjectBehavior
         $email = new \SendGrid\Email();
         $email->setFrom('yoda@jedi.com');
         $email->setFromName('Master Jedi Yoda');
-        $email->addTo('janedoe@example.com', 'Jane Doe');
-        $email->addTo('johndoe@example.com', 'John Doe');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
+        $email->addSmtpapiTo('johndoe@example.com', 'John Doe');
         $email->setSubject('Example subject');
+        $email->setHtml(' ');
         $email->setTemplateId('example-template');
         $email->setSubstitutions([
             'Some variable' => ['Jane value for variable', 'John value for variable'],
@@ -153,5 +160,122 @@ class MailerSpec extends ObjectBehavior
         $sendGrid->send($email)->shouldBeCalled();
 
         $this->send('Example subject', 'example-template')->shouldReturn(true);
+    }
+
+    public function it_gets_mailer_data()
+    {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $variableOne = new Variable('global_one', 'Example');
+        $variableTwo = new Variable('global_two', 'Another example');
+        $variableThree = new Variable('local', 'Yet another example');
+
+        $this->setSubject('Example subject');
+        $this->setTemplate('example template');
+        $this->addRecipient($recipient);
+        $this->addGlobalVariable($variableOne);
+        $this->addGlobalVariable($variableTwo);
+        $this->addLocalVariable($recipient, $variableThree);
+
+        $this->getData()->shouldReturn([
+            'from_name' => 'Master Jedi Yoda',
+            'from_email' => 'yoda@jedi.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [
+                'janedoe@example.com' => $recipient
+            ],
+            'global_vars' => [
+                'global_one' => 'Example',
+                'global_two' => 'Another example'
+            ],
+            'local_vars' => [
+                'janedoe@example.com' => [$variableThree]
+            ],
+            'headers' => [],
+            'reply_to' => null,
+            'attachments' => [],
+        ]);
+    }
+
+    public function it_sets_mailer_data(\SendGrid $sendGrid)
+    {
+        $this->setData([
+            'from_name' => 'Master Jedi Yoda',
+            'from_email' => 'yoda@jedi.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [
+                'janedoe@example.com' => new Recipient('Jane Doe', 'janedoe@example.com')
+            ],
+            'global_vars' => [
+                'global_one' => 'Example',
+                'global_two' => 'Another example'
+            ],
+            'local_vars' => [
+                'janedoe@example.com' => [new Variable('local', 'Yet another example')]
+            ],
+            'headers' => [],
+            'reply_to' => null,
+            'attachments' => [],
+        ]);
+
+        $email = new \SendGrid\Email();
+        $email->setFrom('yoda@jedi.com');
+        $email->setFromName('Master Jedi Yoda');
+        $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
+        $email->setSubject('Example subject');
+        $email->setHtml(' ');
+        $email->setTemplateId('example template');
+        $email->setSections([
+            'global_one' => 'Example',
+            'global_two' => 'Another example'
+        ]);
+        $email->setSubstitutions([
+            'local' => ['Yet another example'],
+        ]);
+
+        $sendGrid->send($email)->shouldBeCalled();
+
+        $this->send('Example subject', 'example template')->shouldReturn(true);
+    }
+
+    public function it_pushes_mail_to_queue(Queue $queue)
+    {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $variableOne = new Variable('global_one', 'Example');
+        $variableTwo = new Variable('global_two', 'Another example');
+        $variableThree = new Variable('local', 'Yet another example');
+
+        $data = [
+            'from_name' => 'Master Jedi Yoda',
+            'from_email' => 'yoda@jedi.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [
+                'janedoe@example.com' => $recipient
+            ],
+            'global_vars' => [
+                'global_one' => 'Example',
+                'global_two' => 'Another example'
+            ],
+            'local_vars' => [
+                'janedoe@example.com' => [$variableThree]
+            ],
+            'headers' => [],
+            'reply_to' => null,
+            'attachments' => [],
+        ];
+
+        $this->setSubject('Example subject');
+        $this->setTemplate('example template');
+        $this->addRecipient($recipient);
+        $this->addGlobalVariable($variableOne);
+        $this->addGlobalVariable($variableTwo);
+        $this->addLocalVariable($recipient, $variableThree);
+
+        $job = new Job($data);
+        $queue->pushOn('sendgrid', $job)->shouldBeCalled();
+
+        $this->queue()->shouldReturn(true);
     }
 }
