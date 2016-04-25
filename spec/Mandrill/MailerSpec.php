@@ -611,6 +611,6 @@ class MailerSpec extends ObjectBehavior
         $job = new Job($data);
         $queue->pushOn('mandrill', $job)->shouldBeCalled();
 
-        $this->queue()->shouldReturn(true);
+        $this->queue('mandrill')->shouldReturn(true);
     }
 }
