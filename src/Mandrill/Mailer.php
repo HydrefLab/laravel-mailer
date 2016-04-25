@@ -200,7 +200,7 @@ class Mailer implements MailerInterface
      * @param string|null $template
      * @return bool
      */
-    public function queue($queue = 'mandrill', $subject = null, $template = null)
+    public function queue($queue, $subject = null, $template = null)
     {
         if (null !== $subject) {
             $this->setSubject($subject);

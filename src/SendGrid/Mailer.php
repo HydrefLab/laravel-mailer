@@ -30,7 +30,7 @@ class Mailer implements MailerInterface
     protected $headers = [];
     /** @var string|null */
     protected $replyTo = null;
-    /** @var array */
+    /** @var Variable */
     protected $globalVariables = [];
     /** @var Variable[] */
     protected $localVariables = [];
@@ -118,18 +118,18 @@ class Mailer implements MailerInterface
         $email->setTemplateId($this->template);
 
         foreach ($this->recipients as $recipient) {
-            if (true === $recipient->getType()->equals(RecipientType::to())) {
-                $email->addSmtpapiTo($recipient->getEmail(), $recipient->getName());
-            } else if (true === $recipient->getType()->equals(RecipientType::bcc())) {
-                $email->addBcc($recipient->getEmail(), $recipient->getName());
-            } else if (true === $recipient->getType()->equals(RecipientType::cc())) {
-                $email->addCc($recipient->getEmail(), $recipient->getName());
-            }
+            /**
+             * SendGrid API library requires to use 'addSmtpapiTo' method in case of many recipients.
+             * On the other side, it does not allow to mix Smtpapi methods with non-Smtpapi methods, therefore,
+             * original methods 'addBcc' and 'addCc' cannot be used here.
+             */
+            $email->addSmtpapiTo($recipient->getEmail(), $recipient->getName());
         }
 
-        $email->setSections($this->globalVariables);
         $email->setSubstitutions($this->getLocalVariables());
         $email->setAttachments($this->attachments);
+
+        $this->setSections($email);
 
         if (null !== $this->replyTo) {
             $email->setReplyTo($this->replyTo);
@@ -157,7 +157,7 @@ class Mailer implements MailerInterface
      * @param string|null $template
      * @return bool
      */
-    public function queue($queue = 'sendgrid', $subject = null, $template = null)
+    public function queue($queue, $subject = null, $template = null)
     {
         if (null !== $subject) {
             $this->setSubject($subject);
@@ -287,6 +287,28 @@ class Mailer implements MailerInterface
         }
 
         return $localVariables;
+    }
+
+    /**
+     * In SendGrid sections are used only with connection to substitutions.
+     * Here, we're adding 'fake' substitutions that use defined sections.
+     *
+     * @param \SendGrid\Email $email
+     * @return void
+     */
+    protected function setSections(\SendGrid\Email $email)
+    {
+        if (false === empty($this->globalVariables)) {
+            foreach ($this->globalVariables as $name => $value) {
+                /** @var Variable $globalVariable */
+
+                $sectionName = $name . '_SECTION';
+                $substitution = array_fill(0, count($this->recipients), $sectionName);
+
+                $email->addSection($sectionName, $value);
+                $email->addSubstitution($name, $substitution);
+            }
+        }
     }
 
     /**
