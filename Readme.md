@@ -16,6 +16,11 @@ Package also adds possibility to configure your Mandrill templates in the code a
 ## Compatibility
 Package is compatible with Laravel 5.2.
 
+### SendGrid
+New SendGrid API has some downsides when it comes to sending emails to multiple recipients. In order not to break anything, SendGrid mailer treats all recipients as of `to` type.
+
+For more information, please check https://github.com/sendgrid/sendgrid-php#please-read-this.
+
 ## Installation
 
 ### Version >= 2.0
@@ -194,7 +199,7 @@ interface MailerInterface
 - `addLocalVariable()`: adds variable for specified recipient (in Manrdill it is equivalent to merge var, in SendGrid it is equivalent to substitution); requires `Recipient` and `Variable` objects as arguments
 - `addAttachment()`: adds attachment to the message; requires `Attachment` object as argument
 - `send()`: sends message to previously defined recipients; email subject (`string`) and template identifier (`string`) can be passed (if subject and/or template id was not set before)
-- `queue()`: adds email to queue (**it uses Laravel queue mechanism**); queue name (`string`) can be passed as first param (by default it is set to 'mandrill'/'sendgrid'); email subject (`string`) and template identifier (`string`) can also be passed (if not set before)
+- `queue()`: adds email to queue (**it uses Laravel queue mechanism**); queue name (`string`) must be passed as first param; email subject (`string`) and template identifier (`string`) can also be passed (if not set before)
 - `getData()`: gets mailer whole configuration, i.e. recipients, variables, header, etc.; returns `array`
 - `setData()`: sets mailer configuration; requires `array`
 

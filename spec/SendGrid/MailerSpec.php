@@ -58,8 +58,8 @@ class MailerSpec extends ObjectBehavior
         $email->setFromName('Master Jedi Yoda');
         $email->addSmtpapiTo('janedoe@example.com', 'Jane Doe');
         $email->addSmtpapiTo('johndoe@example.com', 'John Doe');
-        $email->addCc('brucewayne@gotham.com', 'Bruce Wayne');
-        $email->addBcc('clarkkent@dailyplanet.com', 'Clark Kent');
+        $email->addSmtpapiTo('brucewayne@gotham.com', 'Bruce Wayne');
+        $email->addSmtpapiTo('clarkkent@dailyplanet.com', 'Clark Kent');
         $email->setSubject('Example subject');
         $email->setHtml(' ');
         $email->setTemplateId('example-template');
@@ -118,8 +118,12 @@ class MailerSpec extends ObjectBehavior
         $email->setHtml(' ');
         $email->setTemplateId('example-template');
         $email->setSections([
-            'Some variable' => 'Some variable value',
-            'Some different variable' => 'Some different variable value'
+            'Some variable_SECTION' => 'Some variable value',
+            'Some different variable_SECTION' => 'Some different variable value'
+        ]);
+        $email->setSubstitutions([
+            'Some variable' => ['Some variable_SECTION'],
+            'Some different variable' => ['Some different variable_SECTION']
         ]);
 
         $sendGrid->send($email)->shouldBeCalled();
@@ -227,11 +231,13 @@ class MailerSpec extends ObjectBehavior
         $email->setHtml(' ');
         $email->setTemplateId('example template');
         $email->setSections([
-            'global_one' => 'Example',
-            'global_two' => 'Another example'
+            'global_one_SECTION' => 'Example',
+            'global_two_SECTION' => 'Another example'
         ]);
         $email->setSubstitutions([
             'local' => ['Yet another example'],
+            'global_one' => ['global_one_SECTION'],
+            'global_two' => ['global_two_SECTION']
         ]);
 
         $sendGrid->send($email)->shouldBeCalled();
@@ -276,6 +282,6 @@ class MailerSpec extends ObjectBehavior
         $job = new Job($data);
         $queue->pushOn('sendgrid', $job)->shouldBeCalled();
 
-        $this->queue()->shouldReturn(true);
+        $this->queue('sendgrid')->shouldReturn(true);
     }
 }
