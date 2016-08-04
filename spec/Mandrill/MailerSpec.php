@@ -474,6 +474,37 @@ class MailerSpec extends ObjectBehavior
         ]);
     }
 
+    public function it_clears_mailer_data()
+    {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $variableOne = new Variable('global_one', 'Example');
+        $variableTwo = new Variable('global_two', 'Another example');
+        $variableThree = new Variable('local', 'Yet another example');
+        $attachment = new Attachment('text/csv', 'test.csv', 'example;test;');
+
+        $this->setSubject('Example subject');
+        $this->setTemplate('example template');
+        $this->addRecipient($recipient);
+        $this->addGlobalVariable($variableOne);
+        $this->addGlobalVariable($variableTwo);
+        $this->addLocalVariable($recipient, $variableThree);
+        $this->addAttachment($attachment);
+
+        $this->clear();
+
+        $this->getData()->shouldReturn([
+            'from_name' => 'John Doe',
+            'from_email' => 'johndoe@example.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [],
+            'global_vars' => [],
+            'local_vars' => [],
+            'headers' => [],
+            'attachments' => [],
+        ]);
+    }
+
     public function it_sets_mailer_data(
         \Weblee\Mandrill\Mail $mandrill,
         \Mandrill_Messages $mandrillMessages

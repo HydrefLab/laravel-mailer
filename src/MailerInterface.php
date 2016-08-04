@@ -34,6 +34,11 @@ interface MailerInterface
     public function send($subject = null, $template = null);
 
     /**
+     * @return void
+     */
+    public function clear();
+
+    /**
      * @param string $queue
      * @param string|null $subject
      * @param string|null $template
