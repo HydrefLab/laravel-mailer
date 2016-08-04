@@ -201,6 +201,36 @@ class MailerSpec extends ObjectBehavior
         ]);
     }
 
+    public function it_clears_mailer_data()
+    {
+        $recipient = new Recipient('Jane Doe', 'janedoe@example.com');
+        $variableOne = new Variable('global_one', 'Example');
+        $variableTwo = new Variable('global_two', 'Another example');
+        $variableThree = new Variable('local', 'Yet another example');
+
+        $this->setSubject('Example subject');
+        $this->setTemplate('example template');
+        $this->addRecipient($recipient);
+        $this->addGlobalVariable($variableOne);
+        $this->addGlobalVariable($variableTwo);
+        $this->addLocalVariable($recipient, $variableThree);
+
+        $this->clear();
+
+        $this->getData()->shouldReturn([
+            'from_name' => 'Master Jedi Yoda',
+            'from_email' => 'yoda@jedi.com',
+            'subject' => 'Example subject',
+            'template' => 'example template',
+            'recipients' => [],
+            'global_vars' => [],
+            'local_vars' => [],
+            'headers' => [],
+            'reply_to' => null,
+            'attachments' => [],
+        ]);
+    }
+
     public function it_sets_mailer_data(\SendGrid $sendGrid)
     {
         $this->setData([
