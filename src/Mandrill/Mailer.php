@@ -195,6 +195,18 @@ class Mailer implements MailerInterface
     }
 
     /**
+     * @return void
+     */
+    public function clear()
+    {
+        $this->recipients = [];
+        $this->headers = [];
+        $this->globalVariables = [];
+        $this->localVariables = [];
+        $this->attachments = [];
+    }
+
+    /**
      * @param string $queue
      * @param string|null $subject
      * @param string|null $template
